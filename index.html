@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AETHER AI | The Electric Monolith</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.82/build/spline-viewer.js"></script>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary:           #0010bc;
+  --primary-container: #091FF9;
+  --surface:           #fbf8ff;
+  --surface-low:       #f4f2ff;
+  --surface-high:      #e8e6f6;
+  --surface-highest:   #e3e1f0;
+  --surface-container: #eeecfc;
+  --on-surface:        #1a1b25;
+  --on-surface-var:    #444557;
+  --outline-var:       #c5c5da;
+}
+html { scroll-behavior: auto; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--surface);
+  color: var(--on-surface);
+  overflow-x: hidden;
+}
+h1, h2, h3, .brand { font-family: 'Space Grotesk', sans-serif; }
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── Loader ───────────────────────────────────────────────────────────── */
+#loader {
+  position: fixed; inset: 0;
+  background: var(--on-surface);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+#loader.hidden { opacity: 0; visibility: hidden; }
+#loader .brand-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--surface);
+  letter-spacing: -0.02em;
+  margin-bottom: 2rem;
+}
+#loader .brand-name span { color: var(--primary-container); }
+#progress-track {
+  width: 200px; height: 1px;
+  background: rgba(255,255,255,0.1);
+  position: relative;
+}
+#progress-bar {
+  height: 100%;
+  background: var(--primary-container);
+  width: 0%;
+  transition: width 0.1s ease;
+}
+#progress-pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.3);
+  margin-top: 1rem;
+  text-transform: uppercase;
+}
+
+/* ── Navbar ───────────────────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; width: 100%;
+  z-index: 100;
+  background: rgba(251,248,255,0.80);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 rgba(26,27,37,0.05);
+}
+.nav-inner {
+  max-width: 1440px; margin: 0 auto;
+  padding: 1.5rem 3rem;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.01em;
+}
+.nav-logo { font-size: 1.25rem; font-weight: 700; color: var(--on-surface); text-decoration: none; }
+.nav-links { display: flex; gap: 2.5rem; list-style: none; }
+.nav-links a {
+  color: var(--on-surface); text-decoration: none;
+  font-size: 0.9rem; font-weight: 500;
+  opacity: 0.6; transition: opacity 0.2s, color 0.2s;
+}
+.nav-links a:hover, .nav-links a.active { opacity: 1; color: var(--primary-container); }
+.nav-links a.active { border-bottom: 2px solid var(--primary-container); }
+.btn-cta {
+  background: linear-gradient(135deg, var(--primary), var(--primary-container));
+  color: #fff; border: none; cursor: pointer;
+  padding: 0.75rem 2rem;
+  border-radius: 0.375rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem; font-weight: 600;
+  transition: transform 0.2s ease;
+  text-decoration: none;
+}
+.btn-cta:hover { transform: scale(1.04); }
+
+/* ── Lang switcher ────────────────────────────────────────────────────── */
+.lang-switcher {
+  display: flex; align-items: center; gap: 0.25rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.lang-btn {
+  background: none; border: none; cursor: pointer;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.25rem;
+  color: var(--on-surface);
+  opacity: 0.35;
+  transition: opacity 0.2s, background 0.2s;
+  font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit;
+}
+.lang-btn:hover { opacity: 0.7; }
+.lang-btn.active { opacity: 1; color: var(--primary-container); background: rgba(9,31,249,0.07); }
+.lang-divider { color: var(--outline-var); opacity: 0.5; font-size: 0.7rem; }
+
+/* ── Hero + Canvas ────────────────────────────────────────────────────── */
+#scroll-stage {
+  position: relative;
+  height: 500vh;
+}
+#sticky-hero {
+  position: sticky; top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+#hero-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(8,14,32,1.0)  0%,
+    rgba(8,14,32,1.0)  20%,
+    rgba(8,14,32,0.70) 45%,
+    rgba(8,14,32,0.15) 70%,
+    rgba(8,14,32,0.0)  100%
+  );
+}
+.hero-content {
+  position: relative; z-index: 2;
+  max-width: 1440px; width: 100%;
+  padding: 0 3rem;
+  display: grid; grid-template-columns: 7fr 5fr;
+  gap: 3rem; align-items: center;
+}
+.hero-text { max-width: 680px; }
+.hero-eyebrow {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--primary-container);
+  margin-bottom: 1.5rem;
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s;
+}
+.hero-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(3.5rem, 7vw, 7rem);
+  font-weight: 700;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  margin-bottom: 2rem;
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.9s ease 0.4s, transform 0.9s ease 0.4s;
+}
+.hero-title .electric { color: var(--primary-container); }
+.hero-desc {
+  font-size: 1.1rem; line-height: 1.7;
+  color: rgba(255,255,255,0.65);
+  font-weight: 300;
+  max-width: 480px;
+  margin-bottom: 3rem;
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.8s ease 0.6s, transform 0.8s ease 0.6s;
+}
+.hero-actions {
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.8s ease 0.8s, transform 0.8s ease 0.8s;
+}
+.hero-actions .btn-primary {
+  background: var(--primary-container);
+  color: #fff; border: none; cursor: pointer;
+  padding: 1.25rem 2.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem; font-weight: 700;
+  letter-spacing: -0.01em;
+  box-shadow: 0 12px 32px rgba(9,31,249,0.25);
+  transition: background 0.2s, transform 0.2s;
+}
+.hero-actions .btn-primary:hover { background: var(--primary); transform: translateY(-2px); }
+.hero-actions .btn-ghost {
+  background: transparent;
+  color: #ffffff; border: none; cursor: pointer;
+  padding: 1.25rem 2.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem; font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.25);
+  transition: background 0.2s;
+}
+.hero-actions .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+/* scroll progress indicator */
+.scroll-hint {
+  position: absolute; bottom: 2.5rem; left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--on-surface-var); opacity: 0.5;
+  z-index: 3;
+  animation: pulse 2s ease-in-out infinite;
+}
+.scroll-hint-line {
+  width: 1px; height: 40px;
+  background: linear-gradient(to bottom, var(--primary-container), transparent);
+  animation: lineGrow 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+@keyframes lineGrow { 0%,100%{transform:scaleY(0.5)} 50%{transform:scaleY(1)} }
+
+/* animate in on load */
+body.ready .hero-eyebrow,
+body.ready .hero-title,
+body.ready .hero-desc,
+body.ready .hero-actions { opacity: 1; transform: translateY(0); }
+
+/* ── Sections shared ─────────────────────────────────────────────────── */
+.section-wrap { max-width: 1440px; margin: 0 auto; padding: 0 3rem; }
+
+/* ── Services / Bento Grid ───────────────────────────────────────────── */
+#services {
+  background: var(--surface-low);
+  padding: 8rem 0;
+}
+.services-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 5rem; gap: 2rem; flex-wrap: wrap;
+}
+.services-header h2 {
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-weight: 700; letter-spacing: -0.03em;
+}
+.services-header p {
+  color: var(--on-surface-var); margin-top: 1rem;
+  max-width: 360px; line-height: 1.6; font-size: 0.9rem;
+}
+.services-count { display: flex; align-items: center; gap: 0.75rem; }
+.services-count .num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 3rem; font-weight: 700; color: var(--primary-container); line-height: 1;
+}
+.services-count .label {
+  font-size: 0.6rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--on-surface-var); line-height: 1.4;
+}
+.bento-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+}
+.bento-row { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+.card {
+  background: var(--surface);
+  border-radius: 0.75rem;
+  padding: 2.5rem;
+  transition: box-shadow 0.3s ease;
+}
+.card:hover { box-shadow: 0 24px 48px rgba(9,31,249,0.06); }
+.card-icon {
+  width: 3.5rem; height: 3.5rem;
+  background: var(--surface-high);
+  border-radius: 0.5rem;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--primary-container);
+  margin-bottom: 2rem;
+  transition: background 0.2s, color 0.2s;
+}
+.card:hover .card-icon { background: var(--primary-container); color: #fff; }
+.card-icon .material-symbols-outlined { font-size: 1.75rem; }
+.card h3 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; letter-spacing: -0.02em; }
+.card p { font-size: 0.85rem; color: var(--on-surface-var); line-height: 1.7; }
+.card-line {
+  width: 3rem; height: 1px;
+  background: rgba(9,31,249,0.25);
+  margin-top: 2rem;
+  transition: width 0.5s ease;
+}
+.card:hover .card-line { width: 100%; }
+
+/* Wide card (col-span-2 equivalent) */
+.card-wide {
+  display: flex; gap: 3rem; align-items: center;
+}
+.card-wide .card-body { flex: 1; }
+.card-wide .card-visual {
+  width: 45%; aspect-ratio: 16/9;
+  border-radius: 0.5rem; overflow: hidden;
+  background: var(--surface-highest);
+  flex-shrink: 0;
+}
+.card-wide .card-visual img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Blue accent card */
+.card-blue {
+  background: var(--primary-container);
+  color: #fff; position: relative; overflow: hidden;
+}
+
+/* ── Flip card ───────────────────────────────────────────────────────── */
+.flip-wrap {
+  perspective: 1000px;
+  height: 100%;
+  min-height: 320px;
+}
+.flip-inner {
+  position: relative; width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+.flip-wrap:hover .flip-inner { transform: rotateY(180deg); }
+.flip-front, .flip-back {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 0.75rem;
+  padding: 2.5rem;
+  display: flex; flex-direction: column;
+}
+.flip-front {
+  background: var(--primary-container);
+  color: #fff;
+  overflow: hidden;
+}
+.flip-back {
+  background: #fff;
+  color: var(--on-surface);
+  transform: rotateY(180deg);
+  justify-content: space-between;
+}
+.flip-back h3 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1rem; color: var(--on-surface); }
+.flip-back p  { font-size: 0.85rem; color: var(--on-surface-var); line-height: 1.7; flex: 1; }
+.flip-back .btn-more {
+  display: inline-block; margin-top: 1.5rem;
+  background: var(--primary-container);
+  color: #fff; border: none; cursor: pointer;
+  padding: 0.75rem 1.75rem;
+  border-radius: 0.375rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem; font-weight: 700;
+  text-decoration: none; text-align: center;
+  transition: background 0.2s;
+  align-self: flex-start;
+}
+.flip-back .btn-more:hover { background: var(--primary); }
+.card-blue h3 { color: #fff; font-size: 2rem; line-height: 1; }
+.card-blue p { color: rgba(255,255,255,0.75); font-size: 1rem; }
+.card-blue .bg-icon {
+  position: absolute; top: 0; right: 0;
+  padding: 2rem; opacity: 0.15;
+  font-size: 7rem;
+}
+.card-blue .btn-white {
+  display: inline-block; margin-top: 2rem;
+  background: #fff; color: var(--primary-container);
+  padding: 0.75rem 2rem; border-radius: 0.375rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem; font-weight: 700;
+  cursor: pointer; border: none;
+  transition: background 0.2s;
+  text-decoration: none;
+}
+.card-blue .btn-white:hover { background: var(--surface-low); }
+
+/* cipher indicator badge */
+.cipher {
+  position: absolute; bottom: -1rem; left: -1rem;
+  width: 3rem; height: 3rem;
+  background: var(--primary-container);
+  display: flex; align-items: center; justify-content: center;
+}
+.cipher::after {
+  content: ''; width: 0.5rem; height: 0.5rem; background: #fff;
+}
+
+/* ── Spline Section ──────────────────────────────────────────────────── */
+#stack { padding: 8rem 3rem; }
+.spline-card {
+  background: #060910;
+  border-radius: 1rem;
+  overflow: hidden;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 500px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.spline-spotlight {
+  pointer-events: none;
+  position: absolute;
+  border-radius: 50%;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+  opacity: 0;
+  z-index: 1;
+}
+.spline-card:hover .spline-spotlight { opacity: 1; }
+.spline-left {
+  padding: 4rem;
+  display: flex; flex-direction: column; justify-content: center;
+  position: relative; z-index: 2;
+}
+.spline-eyebrow {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.65rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--primary-container); margin-bottom: 1.5rem;
+}
+.spline-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 700; letter-spacing: -0.03em; line-height: 1.05;
+  color: #fff; margin-bottom: 1.5rem;
+}
+.spline-title .electric { color: var(--primary-container); }
+.spline-desc {
+  font-size: 0.95rem; line-height: 1.75;
+  color: rgba(255,255,255,0.5);
+  max-width: 400px; margin-bottom: 2.5rem;
+}
+.spline-right {
+  position: relative;
+}
+spline-viewer {
+  width: 100%; height: 100%;
+  display: block;
+}
+@media (max-width: 1024px) {
+  #stack { padding: 5rem 1.5rem; }
+  .spline-card { grid-template-columns: 1fr; }
+  .spline-right { height: 350px; }
+}
+@media (max-width: 640px) {
+  .spline-left { padding: 2.5rem 2rem; }
+}
+
+/* ── Contact Form Section ────────────────────────────────────────────── */
+#cta { padding: 0 3rem 8rem; }
+.form-wrap {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 5rem; align-items: center;
+  background: var(--on-surface);
+  border-radius: 0.75rem;
+  padding: 5rem;
+  position: relative; overflow: hidden;
+}
+.form-glow {
+  position: absolute; top: -30%; left: -10%;
+  width: 60%; aspect-ratio: 1;
+  background: radial-gradient(circle, rgba(9,31,249,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.form-left h2 {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 700; letter-spacing: -0.03em;
+  color: var(--surface); line-height: 1.05; margin-bottom: 1.5rem;
+}
+.form-left h2 .electric { color: var(--primary-container); }
+.form-left p {
+  color: rgba(251,248,255,0.5);
+  font-size: 0.95rem; line-height: 1.7; max-width: 340px;
+}
+/* The card */
+.form-card {
+  background: var(--surface);
+  border-radius: 0.75rem;
+  padding: 2.5rem;
+}
+.form-card h3 {
+  font-size: 1.1rem; font-weight: 700;
+  letter-spacing: -0.02em; margin-bottom: 2rem;
+  color: var(--on-surface);
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+.form-group label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--primary-container); letter-spacing: 0.02em;
+}
+.form-group label .req { color: var(--primary-container); margin-left: 2px; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: var(--surface-container);
+  border: none; outline: none;
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem; color: var(--on-surface);
+  transition: box-shadow 0.2s;
+  width: 100%;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  box-shadow: 0 0 0 2px var(--primary-container);
+}
+.form-group input::placeholder,
+.form-group textarea::placeholder { color: var(--on-surface-var); opacity: 0.5; }
+.form-group select { appearance: none; cursor: pointer; }
+.form-group textarea { resize: none; height: 100px; }
+.form-select-wrap { position: relative; }
+.form-select-wrap::after {
+  content: '⌄';
+  position: absolute; right: 0.9rem; top: 50%;
+  transform: translateY(-50%);
+  color: var(--on-surface-var); pointer-events: none;
+  font-size: 1rem; line-height: 1;
+}
+.btn-submit {
+  width: 100%; padding: 1rem;
+  background: var(--primary-container);
+  color: #fff; border: none; cursor: pointer;
+  border-radius: 0.375rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem; font-weight: 700;
+  letter-spacing: -0.01em;
+  transition: background 0.2s, transform 0.15s;
+  margin-top: 0.5rem;
+}
+.btn-submit:hover { background: var(--primary); transform: translateY(-1px); }
+
+@media (max-width: 1024px) {
+  .form-wrap { grid-template-columns: 1fr; padding: 3rem 2rem; gap: 3rem; }
+  .form-left p { max-width: 100%; }
+}
+@media (max-width: 640px) {
+  #cta { padding: 0 1.5rem 5rem; }
+  .form-row { grid-template-columns: 1fr; }
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+footer {
+  padding: 5rem 3rem 4rem;
+  background: var(--surface);
+}
+.footer-inner {
+  max-width: 1440px; margin: 0 auto;
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 3rem; flex-wrap: wrap;
+}
+.footer-brand .name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem;
+}
+.footer-brand p {
+  max-width: 280px; font-size: 0.85rem;
+  color: var(--on-surface); opacity: 0.45; line-height: 1.6;
+}
+.footer-links {
+  display: grid; grid-template-columns: repeat(3, 140px); gap: 2rem 4rem;
+}
+.footer-col .col-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--on-surface); margin-bottom: 1.5rem;
+}
+.footer-col a {
+  display: block; margin-bottom: 1rem;
+  font-size: 0.85rem; color: var(--on-surface); opacity: 0.45;
+  text-decoration: none; transition: opacity 0.2s, color 0.2s;
+}
+.footer-col a:hover { opacity: 1; color: var(--primary-container); }
+.footer-bottom {
+  max-width: 1440px; margin: 4rem auto 0;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(197,197,218,0.12);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--on-surface); opacity: 0.35;
+}
+
+/* ── Reveal animations ───────────────────────────────────────────────── */
+.reveal {
+  opacity: 0; transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .nav-links { display: none; }
+  .hero-content { grid-template-columns: 1fr; }
+  .bento-grid { grid-template-columns: 1fr; }
+  .bento-row { grid-template-columns: 1fr; }
+  .card-wide { flex-direction: column; }
+  .card-wide .card-visual { width: 100%; }
+  .stack-grid { grid-template-columns: 1fr; gap: 3rem; }
+  .stack-icons { grid-template-columns: repeat(4, 1fr); gap: 2.5rem 1rem; }
+  .footer-links { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .nav-inner { padding: 1.25rem 1.5rem; }
+  .hero-content { padding: 0 1.5rem; }
+  .section-wrap { padding: 0 1.5rem; }
+  #cta { padding: 0 1.5rem 5rem; }
+  .stack-icons { grid-template-columns: repeat(2, 1fr); }
+  .footer-links { grid-template-columns: repeat(2, 1fr); }
+  .cta-inner { padding: 4rem 1.5rem; }
+}
+
+/* ── Prefers reduced motion ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .hero-eyebrow, .hero-title, .hero-desc, .hero-actions { opacity: 1; transform: none; transition: none; }
+  .scroll-hint { animation: none; }
+  .scroll-hint-line { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOADER ─────────────────────────────────────────────────────────── -->
+<div id="loader">
+  <div class="brand-name">AETHER <span>AI</span></div>
+  <div id="progress-track"><div id="progress-bar"></div></div>
+  <div id="progress-pct">Loading — <span id="pct-num">0</span>%</div>
+</div>
+
+<!-- ── NAVBAR ─────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo brand">AETHER AI</a>
+    <ul class="nav-links">
+      <li><a href="#" class="active" data-i18n="nav.models">Home</a></li>
+      <li><a href="#services" data-i18n="nav.infra">Blog</a></li>
+      <li><a href="#stack" data-i18n="nav.intel">Portfolio</a></li>
+      <li><a href="#cta" data-i18n="nav.company">Contact</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:1.25rem;">
+      <div class="lang-switcher">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <span class="lang-divider">|</span>
+        <button class="lang-btn" data-lang="es">ES</button>
+      </div>
+      <a href="#cta" class="btn-cta" data-i18n="nav.cta">Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO — SCROLL SCRUBBING ────────────────────────────────────────── -->
+<div id="scroll-stage">
+  <div id="sticky-hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-text">
+        <p class="hero-eyebrow" data-i18n="hero.eyebrow">The Strategic Bridge</p>
+        <h1 class="hero-title">
+          <span data-i18n="hero.title1">Global BPO</span><br/>
+          <span data-i18n="hero.title2">&amp; AI-Powered</span><br/>
+          <span class="electric" data-i18n="hero.title3">Growth.</span>
+        </h1>
+        <p class="hero-desc" data-i18n="hero.desc">
+          Elite BPO and AI/Human agent provider for sales, marketing, and tech support. We empower European firms to scale into Latin America with full-scale digital marketing, social media, and brand-building solutions.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-primary" data-i18n="hero.btn1">Scale Now</button>
+          <button class="btn-ghost" data-i18n="hero.btn2">Our Services</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SERVICES ───────────────────────────────────────────────────────── -->
+<section id="services">
+  <div class="section-wrap">
+    <div class="services-header reveal">
+      <div>
+        <h2>Future-Ready Solutions for Global Expansion</h2>
+        <p>Discover what we specialize in — from AI-powered agents to full-scale market expansion strategies built for the modern global enterprise.</p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;align-items:stretch;">
+      <!-- Card 1 -->
+      <div class="reveal reveal-delay-1 flip-wrap">
+        <div class="flip-inner">
+          <div class="flip-front" style="padding:0;overflow:hidden;">
+            <img src="aiagent.jpeg" alt="AI Agent" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:0.75rem;"/>
+            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(9,31,249,0.95) 0%,rgba(9,31,249,0.55) 40%,rgba(9,31,249,0.15) 75%,transparent 100%);border-radius:0.75rem;"></div>
+            <div style="position:absolute;bottom:0;left:0;right:0;padding:2rem;">
+              <h3 style="color:#fff;font-size:1.3rem;">AI & Human BPO Solutions</h3>
+            </div>
+          </div>
+          <div class="flip-back">
+            <div>
+              <h3>AI & Human BPO Solutions</h3>
+              <p>We deploy elite AI and human hybrid agents for sales, marketing, and technical customer support. Our BPO services are engineered to help European companies scale seamlessly into the Latin American market with 24/7 localized operations.</p>
+            </div>
+            <a href="#" class="btn-more" data-i18n="card.more">More Info</a>
+          </div>
+        </div>
+      </div>
+      <!-- Card 2 -->
+      <div class="reveal reveal-delay-2 flip-wrap">
+        <div class="flip-inner">
+          <div class="flip-front" style="padding:0;overflow:hidden;">
+            <img src="marketing.jpeg" alt="Digital Marketing" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:0.75rem;"/>
+            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(9,31,249,0.95) 0%,rgba(9,31,249,0.55) 40%,rgba(9,31,249,0.15) 75%,transparent 100%);border-radius:0.75rem;"></div>
+            <div style="position:absolute;bottom:0;left:0;right:0;padding:2rem;">
+              <h3 style="color:#fff;font-size:1.3rem;">Digital Marketing & Social Media</h3>
+            </div>
+          </div>
+          <div class="flip-back">
+            <div>
+              <h3>Digital Marketing & Social Media</h3>
+              <p>Strategic digital marketing and social media management focused on cultural resonance and brand authority in expansion territories throughout LatAm and Europe.</p>
+            </div>
+            <a href="#" class="btn-more" data-i18n="card.more">More Info</a>
+          </div>
+        </div>
+      </div>
+      <!-- Card 3 -->
+      <div class="reveal reveal-delay-3 flip-wrap">
+        <div class="flip-inner">
+          <div class="flip-front" style="padding:0;overflow:hidden;">
+            <img src="web.jpeg" alt="Web & App Development" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:0.75rem;"/>
+            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(9,31,249,0.95) 0%,rgba(9,31,249,0.55) 40%,rgba(9,31,249,0.15) 75%,transparent 100%);border-radius:0.75rem;"></div>
+            <div style="position:absolute;bottom:0;left:0;right:0;padding:2rem;">
+              <h3 style="color:#fff;font-size:1.3rem;">Web & App Development</h3>
+            </div>
+          </div>
+          <div class="flip-back">
+            <div>
+              <h3>Web & App Development</h3>
+              <p>Building and upgrading robust digital products to support your international expansion, ensuring technical excellence and a competitive digital presence.</p>
+            </div>
+            <a href="#" class="btn-more" data-i18n="card.more">More Info</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STACK ──────────────────────────────────────────────────────────── -->
+<section id="stack">
+  <div class="spline-card reveal" id="spline-card">
+    <div class="spline-spotlight" id="spline-spotlight"></div>
+    <div class="spline-left">
+      <p class="spline-eyebrow">Powered by AI</p>
+      <h2 class="spline-title">Intelligence at the<br/><span class="electric">Core of Every</span><br/>Interaction.</h2>
+      <p class="spline-desc">Our AI infrastructure powers seamless human-machine collaboration across every touchpoint — from sales calls to support tickets, in any language, any time zone.</p>
+      <a href="#cta" class="btn-cta" style="align-self:flex-start;">Get in Touch</a>
+    </div>
+    <div class="spline-right">
+      <spline-viewer url="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"></spline-viewer>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ────────────────────────────────────────────────────────────── -->
+<section id="cta">
+  <div class="form-wrap reveal">
+    <div class="form-glow"></div>
+    <div class="form-left">
+      <h2><span data-i18n="cta.title">Start building the</span><br/><span class="electric" data-i18n="cta.title2">unthinkable.</span></h2>
+      <p data-i18n="cta.desc">Experience the friction-less transition from local dev to global scale in under 60 seconds.</p>
+    </div>
+    <div class="form-card">
+      <h3 data-i18n="form.heading">Business Process Outsourcing Inquiry</h3>
+      <form onsubmit="return false;">
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="form.fname">First Name <span class="req">*</span></label>
+            <input type="text" required/>
+          </div>
+          <div class="form-group">
+            <label data-i18n="form.lname">Last Name <span class="req">*</span></label>
+            <input type="text" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="form.email">Work Email <span class="req">*</span></label>
+          <input type="email" required/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="form.company">Company Name <span class="req">*</span></label>
+            <input type="text" required/>
+          </div>
+          <div class="form-group">
+            <label data-i18n="form.industry">Industry <span class="req">*</span></label>
+            <div class="form-select-wrap">
+              <select required>
+                <option value="" disabled selected></option>
+                <option data-i18n="form.ind1">Technology</option>
+                <option data-i18n="form.ind2">Finance</option>
+                <option data-i18n="form.ind3">Healthcare</option>
+                <option data-i18n="form.ind4">Retail</option>
+                <option data-i18n="form.ind5">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="form.message">Your Expansion Goals Message <span class="req">*</span></label>
+          <textarea data-i18n-placeholder="form.placeholder" placeholder="Tell us about your business goals and how we can help you scale..." required></textarea>
+        </div>
+        <button class="btn-submit" type="submit" data-i18n="form.submit">Send Inquiry</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="name brand">ELECTRIC MONOLITH AI</div>
+      <p data-i18n="footer.brand">Architecting the future of human-machine synthesis through architectural excellence and silicon precision.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <div class="col-title" data-i18n="footer.col1">Resource</div>
+        <a href="#" data-i18n="footer.docs">Documentation</a>
+        <a href="#" data-i18n="footer.api">API Reference</a>
+      </div>
+      <div class="footer-col">
+        <div class="col-title" data-i18n="footer.col2">Legal</div>
+        <a href="#" data-i18n="footer.privacy">Privacy Policy</a>
+        <a href="#" data-i18n="footer.status">Status</a>
+      </div>
+      <div class="footer-col">
+        <div class="col-title" data-i18n="footer.col3">Social</div>
+        <a href="#">Twitter</a>
+        <a href="#">GitHub</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom" data-i18n="footer.copy">
+    © 2024 Electric Monolith AI. All Rights Reserved.
+  </div>
+</footer>
+
+<!-- ── SCRIPTS ────────────────────────────────────────────────────────── -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── Config ─────────────────────────────────────────────────────────── */
+  const FRAME_COUNT = 70;
+  const FRAME_PATH  = (i) => `frames/frame_${String(i).padStart(4,'0')}.webp`;
+
+  /* ── Canvas setup ───────────────────────────────────────────────────── */
+  const canvas = document.getElementById('hero-canvas');
+  const ctx    = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width  = window.innerWidth  * window.devicePixelRatio;
+    canvas.height = window.innerHeight * window.devicePixelRatio;
+    canvas.style.width  = window.innerWidth  + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  /* ── Frame loading ──────────────────────────────────────────────────── */
+  const images     = new Array(FRAME_COUNT);
+  let   loaded     = 0;
+  const loader     = document.getElementById('loader');
+  const progressBar = document.getElementById('progress-bar');
+  const pctNum     = document.getElementById('pct-num');
+
+  function onLoad() {
+    loaded++;
+    const pct = Math.round((loaded / FRAME_COUNT) * 100);
+    progressBar.style.width = pct + '%';
+    pctNum.textContent = pct;
+    if (loaded === FRAME_COUNT) onAllLoaded();
+  }
+
+  for (let i = 0; i < FRAME_COUNT; i++) {
+    const img = new Image();
+    img.onload  = onLoad;
+    img.onerror = onLoad;
+    img.src     = FRAME_PATH(i + 1);
+    images[i]   = img;
+  }
+
+  function drawFrame(index) {
+    const img = images[index];
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+    const cw = canvas.width  / window.devicePixelRatio;
+    const ch = canvas.height / window.devicePixelRatio;
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+    // object-fit: cover
+    const scale = Math.max(cw / iw, ch / ih);
+    const sw = iw * scale;
+    const sh = ih * scale;
+    const sx = (cw - sw) / 2 + cw * 0.15;
+    const sy = (ch - sh) / 2 + ch * 0.08;
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(img, sx, sy, sw, sh);
+  }
+
+  /* ── Scroll scrubbing ───────────────────────────────────────────────── */
+  const stage = document.getElementById('scroll-stage');
+  let currentFrame = 0;
+
+  function updateFrame() {
+    const stageTop    = stage.getBoundingClientRect().top + window.scrollY;
+    const stageHeight = stage.offsetHeight - window.innerHeight;
+    const scrolled    = Math.max(0, window.scrollY - stageTop);
+    const progress    = Math.min(1, scrolled / stageHeight);
+    const frameIndex  = Math.min(FRAME_COUNT - 1, Math.floor(progress * FRAME_COUNT));
+
+    if (frameIndex !== currentFrame) {
+      currentFrame = frameIndex;
+      drawFrame(currentFrame);
+    }
+  }
+
+  window.addEventListener('scroll', updateFrame, { passive: true });
+
+  /* ── After all frames loaded ────────────────────────────────────────── */
+  function onAllLoaded() {
+    drawFrame(0);
+    setTimeout(() => {
+      loader.classList.add('hidden');
+      document.body.classList.add('ready');
+    }, 300);
+  }
+
+  /* ── Intersection Observer — reveal ─────────────────────────────────── */
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer  = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(el => observer.observe(el));
+
+  /* ── Spline spotlight ───────────────────────────────────────────────── */
+  const splineCard = document.getElementById('spline-card');
+  const spotlight  = document.getElementById('spline-spotlight');
+  if (splineCard && spotlight) {
+    splineCard.addEventListener('mousemove', (e) => {
+      const rect = splineCard.getBoundingClientRect();
+      spotlight.style.left = (e.clientX - rect.left) + 'px';
+      spotlight.style.top  = (e.clientY - rect.top)  + 'px';
+    });
+  }
+
+  /* ── i18n ───────────────────────────────────────────────────────────── */
+  const translations = {
+    en: {
+      'nav.models':'Home','nav.infra':'Blog','nav.intel':'Portfolio',
+      'nav.company':'Contact','nav.cta':'Get Started',
+      'hero.eyebrow':'The Strategic Bridge',
+      'hero.title1':'Global BPO','hero.title2':'& AI-Powered','hero.title3':'Growth.',
+      'hero.desc':'Elite BPO and AI/Human agent provider for sales, marketing, and tech support. We empower European firms to scale into Latin America with full-scale digital marketing, social media, and brand-building solutions.',
+      'hero.btn1':'Scale Now','hero.btn2':'Our Services','hero.scroll':'Scroll',
+      'svc.title':'Core Architectures',
+      'svc.desc':'Our specialized infrastructure layers designed for extreme scale and surgical precision.',
+      'svc.count':'Distinct<br/>Protocols',
+      'c1.title':'Neural Logic','c1.desc':'High-level reasoning engines that adapt to enterprise context in real-time without retraining overhead.',
+      'c2.title':'Edge Infrastructure','c2.desc':'Sub-5ms latency for distributed intelligence. Deploy models exactly where the data is born.',
+      'c3.title':'Automated<br/>Synthetic Lab','c3.desc':'Generating infinite high-fidelity data streams for training the un-trainable.','c3.btn':'Access Laboratory',
+      'c4.title':'Vault Security','c4.desc':'Zero-trust model architecture ensuring weights and parameters are never exposed in flight.',
+      'stack.title':'The Stack.','stack.desc':'Built on the most resilient frameworks in modern computing. We don\'t just use tools; we forge them.',
+      'cta.title':'Start building the','cta.title2':'unthinkable.',
+      'cta.desc':'Experience the friction-less transition from local dev to global scale in under 60 seconds.',
+      'cta.btn':'Initialize Cluster',
+      'footer.brand':'Architecting the future of human-machine synthesis through architectural excellence and silicon precision.',
+      'footer.col1':'Resource','footer.docs':'Documentation','footer.api':'API Reference',
+      'footer.col2':'Legal','footer.privacy':'Privacy Policy','footer.status':'Status',
+      'footer.col3':'Social','footer.copy':'© 2024 Electric Monolith AI. All Rights Reserved.',
+      'form.heading':'Business Process Outsourcing Inquiry',
+      'form.fname':'First Name <span class="req">*</span>','form.lname':'Last Name <span class="req">*</span>',
+      'form.email':'Work Email <span class="req">*</span>','form.company':'Company Name <span class="req">*</span>',
+      'form.industry':'Industry <span class="req">*</span>','form.message':'Your Expansion Goals Message <span class="req">*</span>',
+      'form.placeholder':'Tell us about your business goals and how we can help you scale...',
+      'form.submit':'Send Inquiry',
+      'form.ind1':'Technology','form.ind2':'Finance','form.ind3':'Healthcare','form.ind4':'Retail','form.ind5':'Other',
+      'card.more':'More Info'
+    },
+    es: {
+      'nav.models':'Modelos','nav.infra':'Infraestructura','nav.intel':'Inteligencia',
+      'nav.company':'Empresa','nav.cta':'Comenzar',
+      'hero.eyebrow':'El Puente Estratégico',
+      'hero.title1':'BPO Global','hero.title2':'& Crecimiento','hero.title3':'con IA.',
+      'hero.desc':'Proveedor élite de BPO y agentes IA/Humanos para ventas, marketing y soporte técnico. Impulsamos a empresas europeas a escalar en Latinoamérica con marketing digital, redes sociales y construcción de marca.',
+      'hero.btn1':'Escalar Ahora','hero.btn2':'Nuestros Servicios','hero.scroll':'Deslizar',
+      'svc.title':'Arquitecturas Principales',
+      'svc.desc':'Nuestras capas de infraestructura especializadas, diseñadas para escala extrema y precisión quirúrgica.',
+      'svc.count':'Protocolos<br/>Distintos',
+      'c1.title':'Lógica Neural','c1.desc':'Motores de razonamiento de alto nivel que se adaptan al contexto empresarial en tiempo real sin necesidad de reentrenamiento.',
+      'c2.title':'Infraestructura Edge','c2.desc':'Latencia menor a 5ms para inteligencia distribuida. Despliega modelos exactamente donde nacen los datos.',
+      'c3.title':'Laboratorio<br/>Sintético Automatizado','c3.desc':'Generando flujos infinitos de datos de alta fidelidad para entrenar lo que parecía inentrenable.','c3.btn':'Acceder al Laboratorio',
+      'c4.title':'Seguridad Vault','c4.desc':'Arquitectura de confianza cero que garantiza que los pesos y parámetros nunca queden expuestos en tránsito.',
+      'stack.title':'El Stack.','stack.desc':'Construido sobre los frameworks más resilientes de la computación moderna. No solo usamos herramientas; las forjamos.',
+      'cta.title':'Empieza a construir lo','cta.title2':'impensable.',
+      'cta.desc':'Experimenta la transición sin fricción del desarrollo local a escala global en menos de 60 segundos.',
+      'cta.btn':'Inicializar Clúster',
+      'footer.brand':'Arquitectando el futuro de la síntesis humano-máquina mediante excelencia arquitectónica y precisión de silicio.',
+      'footer.col1':'Recursos','footer.docs':'Documentación','footer.api':'Referencia API',
+      'footer.col2':'Legal','footer.privacy':'Política de Privacidad','footer.status':'Estado',
+      'footer.col3':'Social','footer.copy':'© 2024 Electric Monolith AI. Todos los derechos reservados.',
+      'form.heading':'Consulta de Outsourcing de Procesos',
+      'form.fname':'Nombre <span class="req">*</span>','form.lname':'Apellido <span class="req">*</span>',
+      'form.email':'Correo Empresarial <span class="req">*</span>','form.company':'Empresa <span class="req">*</span>',
+      'form.industry':'Industria <span class="req">*</span>','form.message':'Mensaje sobre tus Objetivos <span class="req">*</span>',
+      'form.placeholder':'Cuéntanos sobre tus metas de negocio y cómo podemos ayudarte a escalar...',
+      'form.submit':'Enviar Consulta',
+      'form.ind1':'Tecnología','form.ind2':'Finanzas','form.ind3':'Salud','form.ind4':'Retail','form.ind5':'Otro',
+      'card.more':'Más Info'
+    }
+  };
+
+  let currentLang = 'en';
+
+  function applyLang(lang) {
+    currentLang = lang;
+    const dict = translations[lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (dict[key] !== undefined) el.innerHTML = dict[key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      if (dict[key] !== undefined) el.placeholder = dict[key];
+    });
+    document.documentElement.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+  });
+
+  /* ── Smooth RAF render loop (keeps canvas sharp on resize/repaint) ─── */
+  function loop() {
+    updateFrame();
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+})();
+</script>
+</body>
+</html>
